@@ -3,13 +3,137 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
-    <script type="module" src="./js/task-1.js"></script>
-    <script type="module" src="./js/task-2.js"></script>
-    <script type="module" src="./js/task-3.js"></script>
-
+    <title>Dog Jump Game</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            overflow: hidden;
+        }
+        #gameCanvas {
+            display: block;
+            margin: auto;
+            background-color: #87CEEB;
+            border: 2px solid #000;
+        }
+    </style>
 </head>
 <body>
-    
+    <canvas id="gameCanvas" width="800" height="400"></canvas>
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+
+        // Game settings
+        const GRAVITY = 0.3;
+        const JUMP_STRENGTH = -10;
+        const OBSTACLE_SPEED = 4;
+
+        // Dog object
+        const dog = {
+            x: 10,
+            y: canvas.height - 60,
+            width: 30,
+            height: 30,
+            color: 'brown',
+            dy: 0,
+            isJumping: false
+        };
+
+        // Obstacle array
+        const obstacles = [];
+        const obstacleInterval = 1500;
+
+        // Score
+        let score = 0;
+
+        // Generate obstacles
+        function createObstacle() {
+            const obstacleHeight = Math.random() * (100 - 30) + 30;
+            const obstacle = {
+                x: canvas.width,
+                y: canvas.height - obstacleHeight,
+                width: 20,
+                height: obstacleHeight,
+                color: 'green'
+            };
+            obstacles.push(obstacle);
+        }
+
+        // Update game objects
+        function update() {
+            // Update dog position
+            dog.dy += GRAVITY;
+            dog.y += dog.dy;
+
+            if (dog.y > canvas.height - dog.height) {
+                dog.y = canvas.height - dog.height;
+                dog.isJumping = false;
+            }
+
+            // Update obstacles
+            for (let i = obstacles.length - 1; i >= 0; i--) {
+                obstacles[i].x -= OBSTACLE_SPEED;
+
+                // Remove off-screen obstacles
+                if (obstacles[i].x + obstacles[i].width < 0) {
+                    obstacles.splice(i, 1);
+                    score += 1; // Increment score
+                }
+            }
+
+            // Check collisions
+            for (const obstacle of obstacles) {
+                if (
+                    dog.x < obstacle.x + obstacle.width &&
+                    dog.x + dog.width > obstacle.x &&
+                    dog.y < obstacle.y + obstacle.height &&
+                    dog.y + dog.height > obstacle.y
+                ) {
+                    alert(`Game Over! Your score: ${score}`);
+                    document.location.reload();
+                }
+            }
+        }
+
+        // Draw game objects
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Draw dog
+            ctx.fillStyle = dog.color;
+            ctx.fillRect(dog.x, dog.y, dog.width, dog.height);
+
+            // Draw obstacles
+            for (const obstacle of obstacles) {
+                ctx.fillStyle = obstacle.color;
+                ctx.fillRect(obstacle.x, obstacle.y, obstacle.width, obstacle.height);
+            }
+
+            // Draw score
+            ctx.fillStyle = 'black';
+            ctx.font = '20px Arial';
+            ctx.fillText(`Score: ${score}`, 10, 30);
+        }
+
+        // Game loop
+        function gameLoop() {
+            update();
+            draw();
+            requestAnimationFrame(gameLoop);
+        }
+
+        // Event listener for jumping
+        document.addEventListener('keydown', (event) => {
+            if (event.code === 'Space' && !dog.isJumping) {
+                dog.dy = JUMP_STRENGTH;
+                dog.isJumping = true;
+            }
+        });
+
+        // Start the game
+        setInterval(createObstacle, obstacleInterval);
+        gameLoop();
+    </script>
 </body>
 </html>
